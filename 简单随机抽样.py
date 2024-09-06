@@ -5,21 +5,30 @@ import generate_data as gd
 from skopt import gp_minimize
 
 
-# 简单随机抽样
-def simple_choice(sample_sizes, matrix, acceptance_array, rows, P):
+'''通过引入蒙特卡洛方法，我们可以在 simple_choice 函数中进行多次迭代，从而获得更稳定的准确率估计。这种方法特别适用于需要多次随机采样的情况，能够有效减少随机性带来的影响。'''
+# 蒙特卡洛随机简单抽样
+def monte_carlo_simple_choice(sample_sizes, matrix, acceptance_array, rows, P, num_iterations=1):
     accuracy_results = {}
+
     for sample_size in tqdm(sample_sizes):
-        correct_count = 0
-        for i in range(rows):
-            data_set = matrix[i, :].tolist()
-            sample = random.sample(data_set, sample_size)
-            count = sum(sample)
-            percentage = count / sample_size
-            correct = acceptance_array[i]
-            if (percentage < P) == correct:
-                correct_count += 1
-        accuracy = correct_count / rows
+        correct_counts = []
+        for _ in range(num_iterations):
+            correct_count = 0
+            for i in range(rows):
+                data_set = matrix[i, :].tolist()
+                sample = random.sample(data_set, sample_size)
+                count = sum(sample)
+                percentage = count / sample_size
+                correct = acceptance_array[i]
+                if (percentage < P) == correct:
+                    correct_count += 1
+            correct_counts.append(correct_count)
+
+        # 计算平均准确率
+        average_correct_count = np.mean(correct_counts)
+        accuracy = average_correct_count / rows
         accuracy_results[sample_size] = accuracy
+
     return accuracy_results
 
 
@@ -58,22 +67,25 @@ def objective_function(sample_size, matrix, acceptance_array, P):
     correct_count = 0
     for i in range(rows):
         data_set = matrix[i, :].tolist()
-        sample = random.sample(data_set, int(sample_size[0]))
+        sample = random.sample(data_set, int(sample_size))
         count = sum(sample)
-        percentage = count / int(sample_size[0])
+        percentage = count / int(sample_size)
         correct = acceptance_array[i]
         if (percentage < P) == correct:
             correct_count += 1
-    return -correct_count / rows  # 负号是因为gp_minimize默认最小化目标函数
+    accuracy = correct_count / rows
+    return sample_size * (1 - accuracy)  # 优化目标是最小化样本量，同时保持准确率
 
 
 def bayesian_optimization(matrix, acceptance_array, P, sample_sizes):
-    res = gp_minimize(lambda x: objective_function(x, matrix, acceptance_array, P),
-                      [(10, 100)],  # 搜索范围
+    # 定义样本量的搜索范围
+    bounds = [(min(sample_sizes), max(sample_sizes))]  # 使用给定的样本量范围
+    res = gp_minimize(lambda x: objective_function(int(x[0]), matrix, acceptance_array, P),
+                      bounds,
                       n_calls=50,  # 调用次数
                       random_state=1)
     best_sample_size = int(res.x[0])
-    best_accuracy = -res.fun
+    best_accuracy = 1 - res.fun / best_sample_size  # 计算最佳准确率
     return best_sample_size, best_accuracy
 
 
@@ -90,9 +102,12 @@ if __name__ == "__main__":
     # 定义要测试的sample_size范围
     sample_sizes = range(200, 1001)  # 从200到1000
 
-    # 计算每个 sample_size 的 accuracy
-    accuracy_results = simple_choice(sample_sizes, matrix, acceptance_array, rows, P)
+    best_sample_size, best_accuracy = bayesian_optimization(matrix, acceptance_array, P, [200, 1001])
+    print("Best Sample Size:", best_sample_size)
+    print("Best Accuracy:", best_accuracy)
 
+    # 计算每个 sample_size 的 accuracy
+    accuracy_results = monte_carlo_simple_choice(sample_sizes, matrix, acceptance_array, rows, P)
     # 使用 TOPSIS 方法找到最佳 sample_size
     best_sample_size, best_accuracy = topsis(accuracy_results, weights)
 
