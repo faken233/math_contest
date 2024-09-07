@@ -175,14 +175,14 @@ def simulated_annealing(b_matrices, n, p_part, reverse_time, max_iterations, ini
             best_yield = new_yield
 
         # 打印当前迭代的信息
-        print(
-            f"Iteration {iteration + 1}: Temperature = {temperature:.4f}, Current Cost = {current_cost:.2f}, Best Cost = {best_cost:.2f}, Yield Rate = {best_yield:.2f}")
+        # print(
+        #     f"Iteration {iteration + 1}: Temperature = {temperature:.4f}, Current Cost = {current_cost:.2f}, Best Cost = {best_cost:.2f}, Yield Rate = {best_yield:.2f}")
 
     return best_solution, best_cost, best_yield
 
 
 if __name__ == '__main__':
-    b5 = [1]
+    b5 = [0, 1, 2]
     for reverse_time in b5:
         # 生成策略矩阵
         b_matrices = gd.generate_matrix_q3_1(4, reverse_time + 1)
