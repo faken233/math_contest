@@ -1,7 +1,6 @@
 import numpy as np
 import generate_data_q2_q3 as gd
 
-
 # 变量
 p1_list = [0.1, 0.2, 0.1, 0.2, 0.1, 0.05]  # 部件一的次品率
 p2_list = [0.1, 0.2, 0.1, 0.2, 0.2, 0.05]  # 部件二的次品率
@@ -17,7 +16,7 @@ purchase = 56  # 成品售价
 punish = 6  # 惩罚
 dismantle = 5  # 拆解成本
 W = 0    # 总收益
-COST = price_1 * n + price_2 * m  # 总成本
+COST = price_1 * n + price_2 * m # 总成本
 # b1 部件一不被检测的flag值, 0表示被检查, 1表示不检查, 且列表中如果出现过0, 使得利润最大化的操作则是将0之后的数据改为1. b2以及b3同.
 # b2 部件二~~
 # b3 是否对成品进行检查
@@ -46,7 +45,16 @@ def func(p1, p2, p3, n, m, b1, b2, b3, b4):
     # 获取最大成品数
     _p1 = p1 * b1
     _p2 = p2 * b2
-    c3 = min(n, m)
+
+    # c3 = min(n, m)
+    overflow_1 = 0
+    overflow_2 = 0
+    if n >= m:
+        c3 = m
+        overflow_1 = n - m
+    else:
+        c3 = n
+        overflow_2 = m - n
 
     # 获取成品装配后次品率
     # _p3 = _p1 + (1 - _p1) * _p2 + (1 - _p2) * (1 - _p1) * p3
@@ -69,15 +77,15 @@ def func(p1, p2, p3, n, m, b1, b2, b3, b4):
         unqualified_product_count = c3 - qualified_product_count
         # 注意回炉重造时的次品率变化
         if _p1 != 0.0:
-            _p1 = c3 * _p1 / unqualified_product_count
+            _p1 = (c3 * _p1 + overflow_1 * p1) / (unqualified_product_count + overflow_1)
         if _p2 != 0.0:
-            _p2 = c3 * _p2 / unqualified_product_count
+            _p2 = (c3 * _p2 + overflow_2 * p2) / (unqualified_product_count + overflow_2)
 
         # 拆解成本
         COST += unqualified_product_count * dismantle
 
         # 递归模拟回炉
-        func(_p1, _p2, p3, unqualified_product_count, unqualified_product_count, b_matrix[0, -b4], b_matrix[1, -b4], b_matrix[2, -b4], b4 - 1)
+        func(_p1, _p2, p3, unqualified_product_count + overflow_1, unqualified_product_count + overflow_2, b_matrix[0, -b4], b_matrix[1, -b4], b_matrix[2, -b4], b4 - 1)
     else:
         return
 
