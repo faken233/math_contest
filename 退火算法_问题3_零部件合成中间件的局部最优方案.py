@@ -12,7 +12,7 @@ max_iterations = 1000  # 最大迭代次数
 
 
 # 部件个数
-n = 100
+n = m = 100
 # 部件购买成本
 price_1 = 2
 price_2 = 8
@@ -35,7 +35,7 @@ check_8 = 2
 
 p_part  = 0.1 # 部件的次品率
 dismantle_semi  = 6   # 半成品拆解成本
-check_semi      = 6   # 半成品检测成本
+check_semi      = 4   # 半成品检测成本
 p_semi          = 0.1 # 半成品次品率
 dismantle_final = 10  # 成品拆解成本
 check_final     = 6   # 成品检测成本
@@ -54,7 +54,6 @@ COST3 = n * (price_7 + price_8)
     b4:    是否对半成品检查
     b5:    对检查出的不合格产品是否拆解
 """
-b_matrix = None
 
 
 # 退火算法的核心函数
@@ -235,7 +234,7 @@ def simulated_annealing1(b_matrices, n, p_part, reverse_time, max_iterations, in
         defective_diff = new_defective - current_defective
 
         # 可以通过调整权重 α, β, γ 来控制各个目标对接受概率的影响
-        alpha, beta, gamma = 0.5, 0.3, 0.2  # 权重值可以根据实际需要调整
+        alpha, beta, gamma = 0.45, 0.45, 0.1  # 权重值可以根据实际需要调整
         objective_diff = alpha * cost_diff - beta * yield_diff + gamma * defective_diff
 
         # 如果新解更优，接受它；如果更差，按概率接受（考虑到 objective_diff 和温度的关系）
@@ -329,19 +328,19 @@ if __name__ == '__main__':
         # 输出最佳结果
         print(f"for situation 1, reversed for {reverse_time} iterations:")
         print(f"Best solution found:\n {best_matrix}")
-        print(f"Best cost: {best_cost}")
-        print(f"Best yield rate: {best_yield}")
-        print(f"Best defective: {best_defective}")
+        print(f"Lowest cost per intermediate_product: {best_cost/(n * best_yield):.2f}")
+        print(f"Highest yield rate: {best_yield:.3f}")
+        print(f"Lowest defective: {best_defective:.3f}")
         print("=====================================")
 
     for reverse_time in reversed_times:
         b_matrices = gd.generate_matrix_q3_1(3, reverse_time + 1)
-        best_matrix, best_cost, best_yield, best_defective = simulated_annealing2(b_matrices, n, p_part, reverse_time, max_iterations,
+        best_matrix, best_cost, best_yield, best_defective = simulated_annealing2(b_matrices, m, p_part, reverse_time, max_iterations,
                                                                   initial_temperature, cooling_rate, min_temperature)
 
         print(f"for situation 2, reversed for {reverse_time} iterations:")
         print(f"Best solution found:\n {best_matrix}")
-        print(f"Best cost: {best_cost}")
-        print(f"Best yield rate: {best_yield}")
-        print(f"Best defective: {best_defective}")
+        print(f"Lowest cost per intermediate_product: {best_cost/(m * best_yield):.2f}")
+        print(f"Highest yield rate: {best_yield:.3f}")
+        print(f"Lowest defective: {best_defective:.3f}")
         print("=====================================")
