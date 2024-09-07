@@ -1,6 +1,9 @@
 import numpy as np
+from scipy.optimize import linprog
 
 import generate_data_q2_q3 as gd
+from deap import base, creator, tools, algorithms
+import random
 
 # 部件个数
 n = 100
@@ -114,12 +117,35 @@ def func_1(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
 
 
 if __name__ == '__main__':
-    b5 = 3
+    b5 = [1]
+    for reverse_time in b5:
+        b_matrices = gd.generate_matrix_q3_1(4, reverse_time + 1)
+        length = len(b_matrices)
+        costs = np.array([])
+        produce = np.array([])
+        defective = np.array([])
+        yield_rate = np.array([])
+        print(f"-----------reverse_time: {reverse_time}-------------")
+        for matrix in b_matrices:
+            b_matrix = matrix
+            a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
+            print(f"produce all: {a:.2f}, unqual: {b:.2f}, COST = {COST:.2f}")
+            costs = np.append(costs, COST)
+            produce = np.append(produce, a)
+            defective = np.append(defective, b)
+            yield_rate = np.append(yield_rate, (a - b) / n)
+            COST = n * (price_1 + price_2 + price_3)
 
-    b_matrices = gd.generate_matrix_q3_1(4, b5 + 1)
-    for matrix in b_matrices:
-        b_matrix = matrix
-        a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], b5)
-        print(f'c_next_step = {a:.2f}, unqualified_product_count = {b:.1f}, Cost = {COST:.2f}')
-        COST = n * (price_1 + price_2 + price_3)
+        cost_max = np.max(costs)
+        cost_min = np.min(costs)
+        yield_rate_max = np.max(yield_rate)
+        yield_rate_min = np.min(yield_rate)
 
+        scores = {}
+        w1 = 0.5
+        w2 = 0.5
+        for i in range(costs.size):
+            costs_normalized = (costs[i] - cost_min) / (cost_max - cost_min)
+            yields_normalized = (yield_rate[i] - yield_rate_min) / (yield_rate_max - yield_rate_min)
+            score = w1 * -costs_normalized + w2 * yields_normalized
+            print(f"cost_normalize = {costs_normalized}, yields_normalized = {yields_normalized}, score = {score}")
