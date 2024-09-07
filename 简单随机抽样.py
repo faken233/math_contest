@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from tqdm import tqdm
-import generate_data as gd
+import generate_data_q1 as gd
 from skopt import gp_minimize
 
 

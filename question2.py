@@ -1,5 +1,5 @@
 import numpy as np
-import generate_data_q2 as gd2
+import generate_data_q2_q3 as gd
 
 # 变量
 p1 = 0.1 # 部件一的次品率
@@ -22,15 +22,14 @@ COST = price_1 * n + price_2 * m # 总成本
 # b3 是否对成品进行检查
 # b4 是否对不合格成品进行拆解
 """
-    即: 要么在一开始就检查, 然后全取1, 要么先不检查, 如果回炉则必须检查, 然后后期全取0
+    即: 要么在一开始就检查, 然后全取1, 要么先不检查, 如果回炉则必须检查, 然后后面元素全取0
     [0,1,1,1...]
     [1,0,1,1,1...]
 """
 
-b_matrices = None
 b_matrix = None
 
-def func(p1, p2, p3, n, m, b1, b2, b3, b4):
+def func(p1, p2, n, m, b1, b2, b3, b4):
     global COST, W, check_1, check_2, check_3, price_assemble, purchase, punish, b_matrix
 
     if b1 == 0:
@@ -48,8 +47,8 @@ def func(p1, p2, p3, n, m, b1, b2, b3, b4):
     c3 = min(n, m)
 
     # 获取成品装配后次品率
-    _p3 = _p1 + (1 - _p1) * _p2 + (1 - _p2) * (1 - _p1) * p3
-
+    # _p3 = _p1 + (1 - _p1) * _p2 + (1 - _p2) * (1 - _p1) * p3
+    _p3 = (1 - (1 - _p2) * (1 - _p1))+ (1 - _p2) * (1 - _p1) * p3
     # 获取装配所需成本
     COST += c3 * price_assemble
 
@@ -69,29 +68,29 @@ def func(p1, p2, p3, n, m, b1, b2, b3, b4):
         unqualified_product_count = c3 - qualified_product_count
         # 注意回炉重造时的次品率变化
         if _p1 != 0.0:
-            _p1 = c3 * p1 / unqualified_product_count
+            _p1 = c3 * _p1 / unqualified_product_count
         if _p2 != 0.0:
-            _p2 = c3 * p2 / unqualified_product_count
+            _p2 = c3 * _p2 / unqualified_product_count
 
         # 拆解成本
         COST += unqualified_product_count * dismantle
 
         # 递归模拟回炉
-        func(_p1, _p2, p3, unqualified_product_count, unqualified_product_count, b_matrix[0, -b4], b_matrix[1, -b4], b_matrix[2, -b4], b4 - 1)
+        func(_p1, _p2, unqualified_product_count, unqualified_product_count, b_matrix[0, -b4], b_matrix[1, -b4], b_matrix[2, -b4], b4 - 1)
     else:
         return
-        
+
 if __name__ == '__main__':
     # 情况1
-    b4 = 1
+    b4 = 4
 
-    b_matrices = gd2.generate_matrix_q2(b4 + 1)
+    b_matrices = gd.generate_matrix_q2(b4 + 1)
     res = np.array([])
     map = {}
     for matrix in b_matrices:
         b_matrix = matrix
-        func(p1, p2, p3, n, m, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b4)
-        single_profit = round((W - COST) / n, 3)
+        func(p1, p2, n, m, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b4)
+        single_profit = round((W - COST) / n, 4)
         res = np.append(res, single_profit)
         map[str(single_profit)] = b_matrix
         W = 0
