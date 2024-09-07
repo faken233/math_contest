@@ -3,6 +3,7 @@ import random
 
 import generate_data_q2_q3 as gd
 
+
 # 定义退火算法的参数
 initial_temperature = 1000  # 初始温度
 cooling_rate = 0.95  # 每次迭代降温的比例
@@ -45,7 +46,7 @@ purchase = 200 # 成品售价
 punish   = 40  # 调换费用
 
 COST1 = COST2 = n * (price_1 + price_2 + price_3) # 半成品一 二的总成本基础值
-COST3 = n * (price_7 * price_8)
+COST3 = n * (price_7 + price_8)
 """
     p1-p3: 对应部件的次品率
     n1-n3: 对应部件数
@@ -63,8 +64,10 @@ def evaluate_solution1(n, p_part, reverse_time):
                   reverse_time)
     current_cost = COST1
     current_yield = (a - b) / n
+    current_defective = b / a
     COST1 = n * (price_1 + price_2 + price_3)  # 重置成本
-    return current_cost, current_yield
+    return current_cost, current_yield, current_defective
+
 
 def evaluate_solution2(n, p_part, reverse_time):
     global COST3, b_matrix
@@ -72,8 +75,10 @@ def evaluate_solution2(n, p_part, reverse_time):
                   reverse_time)
     current_cost = COST3
     current_yield = (a - b) / n
+    current_defective = b / a
     COST3 = n * (price_1 + price_2 + price_3)  # 重置成本
-    return current_cost, current_yield
+    return current_cost, current_yield, current_defective
+
 
 # 评估当前解的成本和良率
 def func_1(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
@@ -106,7 +111,7 @@ def func_1(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
     # 获取合格/不合格产品数
     qualified_product_count = c_semi * (1.0 - _p_semi)
     unqualified_product_count = c_semi - qualified_product_count
-    if b4 == 1: # 对于半成品进行检查
+    if b4 == 1:  # 对于半成品进行检查
         COST1 += check_semi * c_semi
         c_next_step = qualified_product_count
         if b5 >= 1:
@@ -139,6 +144,7 @@ def func_1(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
         # 不回炉也不检查, 所有装配好的半成品进入下一轮工序, 包括次品
         c_next_step = c_semi
         return c_next_step, unqualified_product_count
+
 
 def func_2(p1, p2, n1, n2, b1, b2, b3, b4):
     global COST3, check_7, check_8, price_assemble, b_matrix
@@ -195,18 +201,20 @@ def func_2(p1, p2, n1, n2, b1, b2, b3, b4):
         c_next_step = c_semi
         return c_next_step, unqualified_product_count
 
+
 def simulated_annealing1(b_matrices, n, p_part, reverse_time, max_iterations, initial_temperature, cooling_rate,
                         min_temperature):
-    global COST, b_matrix
+    global b_matrix
 
     # 初始化解：随机选择一个策略矩阵
     current_solution = random.choice(b_matrices)
     b_matrix = current_solution
-    current_cost, current_yield = evaluate_solution1(n, p_part, reverse_time)
+    current_cost, current_yield, current_defective = evaluate_solution1(n, p_part, reverse_time)
 
     best_solution = current_solution
     best_cost = current_cost
     best_yield = current_yield
+    best_defective = current_defective
 
     temperature = initial_temperature
 
@@ -219,42 +227,51 @@ def simulated_annealing1(b_matrices, n, p_part, reverse_time, max_iterations, in
         # 随机选择一个邻近解（即新的策略矩阵）
         new_solution = random.choice(b_matrices)
         b_matrix = new_solution
-        new_cost, new_yield = evaluate_solution1(n, p_part, reverse_time)
+        new_cost, new_yield, new_defective = evaluate_solution1(n, p_part, reverse_time)
 
         # 计算成本差异
         cost_diff = new_cost - current_cost
         yield_diff = new_yield - current_yield
+        defective_diff = new_defective - current_defective
 
-        # 如果新解更优，接受它；如果更差，按概率接受
-        if cost_diff < 0 or (yield_diff > 0 and math.exp(-cost_diff / temperature) > random.random()):
+        # 可以通过调整权重 α, β, γ 来控制各个目标对接受概率的影响
+        alpha, beta, gamma = 0.5, 0.3, 0.2  # 权重值可以根据实际需要调整
+        objective_diff = alpha * cost_diff - beta * yield_diff + gamma * defective_diff
+
+        # 如果新解更优，接受它；如果更差，按概率接受（考虑到 objective_diff 和温度的关系）
+        if objective_diff < 0 or math.exp(-objective_diff / temperature) > random.random():
             current_solution = new_solution
             current_cost = new_cost
             current_yield = new_yield
+            current_defective = new_defective
 
         # 更新最优解
-        if new_cost < best_cost and new_yield > best_yield:
+        if new_cost < best_cost and new_yield > best_yield and new_defective < best_defective:
             best_solution = new_solution
             best_cost = new_cost
             best_yield = new_yield
+            best_defective = new_defective
 
         # 打印当前迭代的信息
         # print(
         #     f"Iteration {iteration + 1}: Temperature = {temperature:.4f}, Current Cost = {current_cost:.2f}, Best Cost = {best_cost:.2f}, Yield Rate = {best_yield:.2f}")
 
-    return best_solution, best_cost, best_yield
+    return best_solution, best_cost, best_yield, best_defective
+
 
 def simulated_annealing2(b_matrices, n, p_part, reverse_time, max_iterations, initial_temperature, cooling_rate,
                         min_temperature):
-    global COST, b_matrix
+    global b_matrix
 
     # 初始化解：随机选择一个策略矩阵
     current_solution = random.choice(b_matrices)
     b_matrix = current_solution
-    current_cost, current_yield = evaluate_solution2(n, p_part, reverse_time)
+    current_cost, current_yield, current_defective = evaluate_solution2(n, p_part, reverse_time)
 
     best_solution = current_solution
     best_cost = current_cost
     best_yield = current_yield
+    best_defective = current_defective
 
     temperature = initial_temperature
 
@@ -267,29 +284,36 @@ def simulated_annealing2(b_matrices, n, p_part, reverse_time, max_iterations, in
         # 随机选择一个邻近解（即新的策略矩阵）
         new_solution = random.choice(b_matrices)
         b_matrix = new_solution
-        new_cost, new_yield = evaluate_solution2(n, p_part, reverse_time)
+        new_cost, new_yield, new_defective = evaluate_solution2(n, p_part, reverse_time)
 
         # 计算成本差异
         cost_diff = new_cost - current_cost
         yield_diff = new_yield - current_yield
+        defective_diff = new_defective - current_defective
 
-        # 如果新解更优，接受它；如果更差，按概率接受
-        if cost_diff < 0 or (yield_diff > 0 and math.exp(-cost_diff / temperature) > random.random()):
+        # 可以通过调整权重 α, β, γ 来控制各个目标对接受概率的影响
+        alpha, beta, gamma = 0.5, 0.3, 0.2  # 权重值可以根据实际需要调整
+        objective_diff = alpha * cost_diff - beta * yield_diff + gamma * defective_diff
+
+        # 如果新解更优，接受它；如果更差，按概率接受（考虑到 objective_diff 和温度的关系）
+        if objective_diff < 0 or math.exp(-objective_diff / temperature) > random.random():
             current_solution = new_solution
             current_cost = new_cost
             current_yield = new_yield
+            current_defective = new_defective
 
         # 更新最优解
-        if new_cost < best_cost and new_yield > best_yield:
+        if new_cost < best_cost and new_yield > best_yield and new_defective < best_defective:
             best_solution = new_solution
             best_cost = new_cost
             best_yield = new_yield
+            best_defective = new_defective
 
         # 打印当前迭代的信息
         # print(
         #     f"Iteration {iteration + 1}: Temperature = {temperature:.4f}, Current Cost = {current_cost:.2f}, Best Cost = {best_cost:.2f}, Yield Rate = {best_yield:.2f}")
 
-    return best_solution, best_cost, best_yield
+    return best_solution, best_cost, best_yield, best_defective
 
 
 if __name__ == '__main__':
@@ -299,7 +323,7 @@ if __name__ == '__main__':
         b_matrices = gd.generate_matrix_q3_1(4, reverse_time + 1)
 
         # 使用退火算法进行优化
-        best_matrix, best_cost, best_yield = simulated_annealing1(b_matrices, n, p_part, reverse_time, max_iterations,
+        best_matrix, best_cost, best_yield, best_defective = simulated_annealing1(b_matrices, n, p_part, reverse_time, max_iterations,
                                                                  initial_temperature, cooling_rate, min_temperature)
 
         # 输出最佳结果
@@ -307,16 +331,17 @@ if __name__ == '__main__':
         print(f"Best solution found:\n {best_matrix}")
         print(f"Best cost: {best_cost}")
         print(f"Best yield rate: {best_yield}")
+        print(f"Best defective: {best_defective}")
         print("=====================================")
-
 
     for reverse_time in reversed_times:
         b_matrices = gd.generate_matrix_q3_1(3, reverse_time + 1)
-        best_matrix, best_cost, best_yield = simulated_annealing2(b_matrices, n, p_part, reverse_time, max_iterations,
+        best_matrix, best_cost, best_yield, best_defective = simulated_annealing2(b_matrices, n, p_part, reverse_time, max_iterations,
                                                                   initial_temperature, cooling_rate, min_temperature)
 
         print(f"for situation 2, reversed for {reverse_time} iterations:")
         print(f"Best solution found:\n {best_matrix}")
         print(f"Best cost: {best_cost}")
         print(f"Best yield rate: {best_yield}")
+        print(f"Best defective: {best_defective}")
         print("=====================================")
