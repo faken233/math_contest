@@ -2,13 +2,28 @@ import numpy as np
 
 import generate_data_q2_q3 as gd
 
+# 部件个数
 n = 100
-price_1 = 2   # 部件一的成本
-price_2 = 8   # 部件二的成本
-price_3 = 12  # 部件三的成本
-check_1 = 2   # 部件一的检测成本
-check_2 = 3   # 部件二的检测成本
-check_3 = 3   # 部件三的检测成本
+# 部件购买成本
+price_1 = 2
+price_2 = 8
+price_3 = 12
+price_4 = 2
+price_5 = 8
+price_6 = 12
+price_7 = 8
+price_8 = 12
+
+# 部件检验成本
+check_1 = 1
+check_2 = 1
+check_3 = 2
+check_4 = 1
+check_5 = 1
+check_6 = 2
+check_7 = 1
+check_8 = 2
+
 p_part  = 0.1 # 部件的次品率
 dismantle_semi  = 6   # 半成品拆解成本
 check_semi      = 6   # 半成品检测成本
@@ -21,7 +36,7 @@ price_assemble  = 8   # 半成品/成品的装配成本
 purchase = 200 # 成品售价
 punish   = 40  # 调换费用
 
-COST = n * (price_1 + price_2 + price_3) # 总成本基础值
+COST = n * (price_1 + price_2 + price_3 + price_4 + price_5 + price_6 + price_7 + price_8) # 总成本基础值
 """
     p1-p3: 对应部件的次品率
     n1-n3: 对应部件数
@@ -32,7 +47,7 @@ COST = n * (price_1 + price_2 + price_3) # 总成本基础值
 b_matrix = None
 
 
-def func(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
+def func_1(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
     global COST, check_1, check_2, check_3, price_assemble, b_matrix
 
     if b1 == 0:
@@ -78,31 +93,33 @@ def func(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
             COST += unqualified_product_count * dismantle_semi
 
             # 递归模拟回炉
-            a, b = func(_p1, _p2, _p3,
+            a, b = func_1(_p1, _p2, _p3,
                         unqualified_product_count,
                         unqualified_product_count,
                         unqualified_product_count,
                         b_matrix[0, -b5], b_matrix[1, -b5], b_matrix[2, -b5], b_matrix[3, -b5], b5 - 1)
+            # 累加, 每次回炉都会有新的半成品伴随进入装配成品工序
             c_next_step += a
+            # 赋值, 每次回炉都会将已有的不合格产品丢进回炉工序, 每次回炉都会对已有的不合格产品做操作, 此处使用赋值
             unqualified_product_count = b
             return c_next_step, unqualified_product_count
         else:
+            # 不回炉, 但是已经检查, 进入下一步工序的半成品为合格品, 没有不合格品混入其中
             return c_next_step, 0
     else:
+        # 不回炉也不检查, 所有装配好的半成品进入下一轮工序, 包括次品
         c_next_step = c_semi
         return c_next_step, unqualified_product_count
-    # 不合格产品处理
+
 
 
 if __name__ == '__main__':
-    # 情况1
     b5 = 3
 
     b_matrices = gd.generate_matrix_q3_1(4, b5 + 1)
-    res = np.array([])
     for matrix in b_matrices:
         b_matrix = matrix
-        a, b = func(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], b5)
-        print(f'c_next_step = {a}, unqualified_product_count = {b}, Cost = {COST}')
+        a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], b5)
+        print(f'c_next_step = {a:.2f}, unqualified_product_count = {b:.1f}, Cost = {COST:.2f}')
         COST = n * (price_1 + price_2 + price_3)
 
