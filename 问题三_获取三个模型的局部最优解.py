@@ -85,7 +85,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
 # 绘制三维散点图
-scatter = ax.scatter(x, y, z, edgecolors='blue', cmap='viridis', marker='o')
+scatter = ax.scatter(x, y, z, edgecolors='blue', marker='o')
 
 # 添加颜色条
 fig.colorbar(scatter, ax=ax, shrink=0.5, aspect=5)
