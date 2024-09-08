@@ -103,7 +103,7 @@ if __name__ == '__main__':
         1次 492843
         0次 326803
     '''
-    b4 = 5  # 回炉次数
+    b4 = 3  # 回炉次数
 
     print(f"p1 = {p_intermediate_1}, p2 = {p_intermediate_2}, p3 = {p_intermediate_3}")
     b_matrices = gd.generate_matrix_q3_2(b4 + 1)

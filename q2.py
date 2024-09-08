@@ -97,7 +97,7 @@ def func(p1, p2, p3, n, m, b1, b2, b3, b4, check_1, check_2, check_3, price_asse
 
 
 if __name__ == '__main__':
-    b4 = 10  # 假设回炉次数为10
+    b4 = 4  # 假设回炉次数为10
 
     # 遍历 p1, p2, p3 的每种组合情况
     for i in range(len(p1_list)):
@@ -119,7 +119,7 @@ if __name__ == '__main__':
         results = []
 
         for j in range(b4):
-            print(f"  Trying with {j} rework steps...")
+            # print(f"  Trying with {j} rework steps...")
             b_matrices = gd.generate_matrix_q2(j + 1)
 
             # 遍历每种 b_matrix
