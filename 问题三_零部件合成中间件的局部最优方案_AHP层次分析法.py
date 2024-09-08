@@ -180,59 +180,61 @@ def calculate_score(decision_matrix, weights):
 
 
 if __name__ == '__main__':
-    b5 = [1]
+    b5 = [0, 1, 2]
+    costs = np.array([])
+    produce = np.array([])
+    defective = np.array([])
+    yield_rate = np.array([])
+    mat = []
     for reverse_time in b5:
         b_matrices = gd.generate_matrix_q3_1(4, reverse_time + 1)
         length = len(b_matrices)
-        costs = np.array([])
-        produce = np.array([])
-        defective = np.array([])
-        yield_rate = np.array([])
-        print(f"-----------reverse_time: {reverse_time}-------------")
+
         for matrix in b_matrices:
             b_matrix = matrix
             a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
-            print(f"{COST1/a:.2f}元/每件\t {a/n:.3f}产率\t {b/a:.3} 次品率")
+            # print(f"{COST1/a:.2f}元/每件\t {a/n:.3f}产率\t {b/a:.3} 次品率")
             costs = np.append(costs, COST1)
             produce = np.append(produce, a)
             defective = np.append(defective, b)
             yield_rate = np.append(yield_rate, (a - b) / n)
+            mat.append(matrix)
             COST1 = n * (price_1 + price_2 + price_3)
 
-        # 标准化处理
-        max_cost = np.max(costs)
-        min_yield = np.min(yield_rate)
-        max_defective = np.max(defective)
+    # 标准化处理
+    max_cost = np.max(costs)
+    min_yield = np.min(yield_rate)
+    max_defective = np.max(defective)
 
-        normalized_costs = -costs / max_cost
-        normalized_yield_rate = yield_rate / min_yield
-        normalized_defective = -defective / max_defective
+    normalized_costs = -costs / max_cost
+    normalized_yield_rate = yield_rate / min_yield
+    normalized_defective = -defective / max_defective
 
-        # 构建标准化后的决策矩阵
-        normalized_decision_matrix = np.array([normalized_costs, normalized_yield_rate, normalized_defective]).T
+    # 构建标准化后的决策矩阵
+    normalized_decision_matrix = np.array([normalized_costs, normalized_yield_rate, normalized_defective]).T
 
 
-        # 示例比较矩阵
-        comparison_matrix = np.array([
-            [5, 3.5, 1.5],  # 成本 vs 良率, 成本 vs 次品率
-            [1 / 3.5, 1, 3],  # 良率 vs 成本, 良率 vs 次品率
-            [1 / 1.5, 1 / 3.5, 1/5]  # 次品率 vs 成本, 次品率 vs 良率
-        ])
+    # 比较矩阵
+    comparison_matrix = np.array([
+        [5,     4    , 1],  # 成本5 vs 良率4, 成本5 vs 次品率1
+        [1 / 4, 1    , 4],  # 良率 vs 成本, 良率 vs 次品率
+        [1    , 1 / 4, 1/5]  # 次品率 vs 成本, 次品率 vs 良率
+    ])
 
-        weights = calculate_weights(comparison_matrix)
-        print("Weights:", weights)
+    weights = calculate_weights(comparison_matrix)
+    print("Weights:", weights)
 
-        scores = calculate_score(normalized_decision_matrix, weights)
-        sorted_indices = np.argsort(scores)[::-1]
+    scores = calculate_score(normalized_decision_matrix, weights)
+    sorted_indices = np.argsort(scores)[::-1]
 
-        # 输出结果
-        for i, index in enumerate(sorted_indices):
-            cost = costs[index]
-            yield_rate_value = yield_rate[index]
-            defective_value = defective[index]
-            produce_value = produce[index]
+    # 输出结果
+    for i, index in enumerate(sorted_indices):
+        cost = costs[index]
+        yield_rate_value = yield_rate[index]
+        defective_value = defective[index]
+        produce_value = produce[index]
 
-            print(f"Rank {i+1}: Matrix {index}, Score: {scores[index]:.4f}")
-            print(f"Cost: {cost:.2f}, Yield Rate: {yield_rate_value:.3f}, Defective: {defective_value:.3f}, Produce: {produce_value:.2f}")
-            print(b_matrices[index])
-            print("=====================================")
+        print(f"Rank {i+1}: Matrix {index}, Score: {scores[index]:.4f}")
+        print(f"Cost: {cost / produce_value:.2f} per one, Yield Rate: {yield_rate_value * 100.0:.3f}%, Defective: {defective_value:.3f}%, Produce: {produce_value:.2f}")
+        print(mat[index])
+        print("=====================================")

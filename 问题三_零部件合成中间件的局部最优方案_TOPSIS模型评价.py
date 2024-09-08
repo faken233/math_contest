@@ -152,7 +152,7 @@ def func_2(p1, p2, n1, n2, b1, b2, b3, b4):
             a, b = func_2(_p1, _p2,
                           unqualified_product_count,
                           unqualified_product_count,
-                          b_matrix[0, -b4], b_matrix[1, -b5], b_matrix[2, -b4], b4 - 1)
+                          b_matrix[0, -b4], b_matrix[1, -b4], b_matrix[2, -b4], b4 - 1)
             # 累加, 每次回炉都会有新的半成品伴随进入装配成品工序
             c_next_step += a
             # 赋值, 每次回炉都会将已有的不合格产品丢进回炉工序, 每次回炉都会对已有的不合格产品做操作, 此处使用赋值
@@ -191,45 +191,96 @@ def topsis(decision_matrix, weights, benefits):
 
 if __name__ == '__main__':
     b5 = [0,1,2]
+    costs = np.array([])
+    produce = np.array([])
+    defective = np.array([])
+    yield_rate = np.array([])
+    matrices = []
     for reverse_time in b5:
-        b_matrices = gd.generate_matrix_q3_1(4, reverse_time + 1)
+        b_matrices = gd.generate_matrix_q3_1(3, reverse_time + 1)
         length = len(b_matrices)
-        costs = np.array([])
-        produce = np.array([])
-        defective = np.array([])
-        yield_rate = np.array([])
-        print(f"-----------reverse_time: {reverse_time}-------------")
+
         for matrix in b_matrices:
             b_matrix = matrix
-            a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
-            # print(f"{COST1/a:.2f}元/每件\t {a/n:.3f}产率\t {b/a:.3} 次品率 mat = {b_matrix}")
+            # a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
+            a, b = func_2(p_part, p_part, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], reverse_time)
             costs = np.append(costs, COST1)
             produce = np.append(produce, a)
             defective = np.append(defective, b)
             yield_rate = np.append(yield_rate, (a - b) / n)
+            matrices.append(matrix)
             COST1 = n * (price_1 + price_2 + price_3)
 
-        # 构建决策矩阵
-        decision_matrix = np.array([costs, yield_rate, defective]).T
+    # 构建决策矩阵
+    decision_matrix = np.array([costs, yield_rate, defective]).T
 
-        # 权重
-        weights = np.array([0.5, 0.35, 0.15])
+    # 权重
+    weights = np.array([0.5, 0.4, 0.1])
 
-        # 指标类型（1 表示效益型，0 表示成本型）
-        benefits = np.array([0, 1, 0])
+    # 指标类型（1 表示效益型，0 表示成本型）
+    benefits = np.array([0, 1, 0])
 
-       # 使用 TOPSIS 方法进行评估
-        relative_closeness, sorted_indices = topsis(decision_matrix, weights, benefits)
+   # 使用 TOPSIS 方法进行评估
+    relative_closeness, sorted_indices = topsis(decision_matrix, weights, benefits)
 
-        # 输出结果
-        for i, index in enumerate(sorted_indices):
-            cost = costs[index]
-            yield_rate_value = yield_rate[index]
-            defective_value = defective[index]
-            produce_value = produce[index]
+    ranks = []
+    matrices_ = []
 
-            print(f"Rank {i + 1}: Matrix {index}, Relative Closeness: {relative_closeness[index]:.4f}")
-            print(
-                f"Cost: {cost:.2f}, Yield Rate: {yield_rate_value:.3f}, Defective: {defective_value:.3f}, Produce: {produce_value:.2f}")
-            print(b_matrices[index])
-            print("=====================================")
+    # 输出结果
+    for i, index in enumerate(sorted_indices):
+        cost = costs[index]
+        yield_rate_value = yield_rate[index]
+        defective_value = defective[index]
+        produce_value = produce[index]
+
+        print(f"Rank {i + 1}: Matrix {index}, Relative Closeness: {relative_closeness[index]:.4f}")
+        print(
+            f"Cost: {cost / produce_value:.2f} per one, Yield Rate: {yield_rate_value * 100.0:.3f}%, Defective: {defective_value:.3f}%, Produce: {produce_value:.2f}")
+        print(matrices[index])
+        print("=====================================")
+        ranks.append(i + 1)
+        matrices_.append(index)
+
+def main():
+    b5 = [0, 1, 2]
+    costs = np.array([])
+    produce = np.array([])
+    defective = np.array([])
+    yield_rate = np.array([])
+    matrices = []
+    for reverse_time in b5:
+        b_matrices = gd.generate_matrix_q3_1(3, reverse_time + 1)
+        length = len(b_matrices)
+
+        for matrix in b_matrices:
+            b_matrix = matrix
+            # a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
+            a, b = func_2(p_part, p_part, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], reverse_time)
+            costs = np.append(costs, COST1)
+            produce = np.append(produce, a)
+            defective = np.append(defective, b)
+            yield_rate = np.append(yield_rate, (a - b) / n)
+            matrices.append(matrix)
+            COST1 = n * (price_1 + price_2 + price_3)
+
+    # 构建决策矩阵
+    decision_matrix = np.array([costs, yield_rate, defective]).T
+
+    # 权重
+    weights = np.array([0.5, 0.4, 0.1])
+
+    # 指标类型（1 表示效益型，0 表示成本型）
+    benefits = np.array([0, 1, 0])
+
+    # 使用 TOPSIS 方法进行评估
+    relative_closeness, sorted_indices = topsis(decision_matrix, weights, benefits)
+
+    ranks = []
+    matrix_index = []
+
+    # 输出结果
+    for i, index in enumerate(sorted_indices):
+        ranks.append(i + 1)
+        matrix_index.append(index)
+
+    return ranks, matrix_index
