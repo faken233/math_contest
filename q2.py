@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.interpolate import CubicSpline
-import generate_data_q2_q3 as gd
+import generate_data_q2 as gd
 import matplotlib.pyplot as plt
 
 # 配置 Matplotlib 显示中文

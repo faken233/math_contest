@@ -1,5 +1,6 @@
 import numpy as np
-import generate_data_q2_q3 as gd
+
+import generate_data_q3 as gd
 
 # 部件个数
 n = 100
@@ -23,19 +24,19 @@ check_6 = 2
 check_7 = 1
 check_8 = 2
 
-p_part = 0.1  # 部件的次品率
-dismantle_semi = 6  # 半成品拆解成本
-check_semi = 6  # 半成品检测成本
-p_semi = 0.1  # 半成品次品率
+p_part  = 0.1 # 部件的次品率
+dismantle_semi  = 6   # 半成品拆解成本
+check_semi      = 6   # 半成品检测成本
+p_semi          = 0.1 # 半成品次品率
 dismantle_final = 10  # 成品拆解成本
-check_final = 6  # 成品检测成本
-p_final = 0.1  # 成品次品率
-price_assemble = 8  # 半成品/成品的装配成本
+check_final     = 6   # 成品检测成本
+p_final         = 0.1 # 成品次品率
+price_assemble  = 8   # 半成品/成品的装配成本
 
-purchase = 200  # 成品售价
-punish = 40  # 调换费用
+purchase = 200 # 成品售价
+punish   = 40  # 调换费用
 
-COST1 = COST2 = n * (price_1 + price_2 + price_3)  # 半成品一 二的总成本基础值
+COST1 = COST2 = n * (price_1 + price_2 + price_3) # 半成品一 二的总成本基础值
 COST3 = n * (price_7 * price_8)
 """
     p1-p3: 对应部件的次品率
@@ -76,7 +77,7 @@ def func_1(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
     # 获取合格/不合格产品数
     qualified_product_count = c_semi * (1.0 - _p_semi)
     unqualified_product_count = c_semi - qualified_product_count
-    if b4 == 1:  # 对于半成品进行检查
+    if b4 == 1: # 对于半成品进行检查
         COST1 += check_semi * c_semi
         c_next_step = qualified_product_count
         if b5 >= 1:
@@ -89,14 +90,14 @@ def func_1(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
                 _p3 = c_semi * _p3 / unqualified_product_count
 
             # 拆解成本
-            COST1 += unqualified_product_count * dismantle_semi
+            COST1+= unqualified_product_count * dismantle_semi
 
             # 递归模拟回炉
             a, b = func_1(_p1, _p2, _p3,
-                          unqualified_product_count,
-                          unqualified_product_count,
-                          unqualified_product_count,
-                          b_matrix[0, -b5], b_matrix[1, -b5], b_matrix[2, -b5], b_matrix[3, -b5], b5 - 1)
+                        unqualified_product_count,
+                        unqualified_product_count,
+                        unqualified_product_count,
+                        b_matrix[0, -b5], b_matrix[1, -b5], b_matrix[2, -b5], b_matrix[3, -b5], b5 - 1)
             # 累加, 每次回炉都会有新的半成品伴随进入装配成品工序
             c_next_step += a
             # 赋值, 每次回炉都会将已有的不合格产品丢进回炉工序, 每次回炉都会对已有的不合格产品做操作, 此处使用赋值
@@ -109,7 +110,6 @@ def func_1(p1, p2, p3, n1, n2, n3, b1, b2, b3, b4, b5):
         # 不回炉也不检查, 所有装配好的半成品进入下一轮工序, 包括次品
         c_next_step = c_semi
         return c_next_step, unqualified_product_count
-
 
 def func_2(p1, p2, n1, n2, b1, b2, b3, b4):
     global COST3, check_7, check_8, price_assemble, b_matrix
@@ -135,7 +135,7 @@ def func_2(p1, p2, n1, n2, b1, b2, b3, b4):
     # 获取合格/不合格产品数
     qualified_product_count = c_semi * (1.0 - _p_semi)
     unqualified_product_count = c_semi - qualified_product_count
-    if b3 == 1:  # 对于半成品进行检查
+    if b3 == 1: # 对于半成品进行检查
         COST3 += check_semi * c_semi
         c_next_step = qualified_product_count
         if b4 >= 1:
@@ -150,9 +150,9 @@ def func_2(p1, p2, n1, n2, b1, b2, b3, b4):
 
             # 递归模拟回炉
             a, b = func_2(_p1, _p2,
-                          unqualified_product_count,
-                          unqualified_product_count,
-                          b_matrix[0, -b4], b_matrix[1, -b4], b_matrix[2, -b4], b4 - 1)
+                        unqualified_product_count,
+                        unqualified_product_count,
+                        b_matrix[0, -b4], b_matrix[1, -b4], b_matrix[2, -b4], b4 - 1)
             # 累加, 每次回炉都会有新的半成品伴随进入装配成品工序
             c_next_step += a
             # 赋值, 每次回炉都会将已有的不合格产品丢进回炉工序, 每次回炉都会对已有的不合格产品做操作, 此处使用赋值
@@ -166,21 +166,7 @@ def func_2(p1, p2, n1, n2, b1, b2, b3, b4):
         c_next_step = c_semi
         return c_next_step, unqualified_product_count
 
-
-def calculate_weights(comparison_matrix):
-    eigenvalues, eigenvectors = np.linalg.eig(comparison_matrix)
-    max_eigenvalue_index = np.argmax(eigenvalues)
-    weights = eigenvectors[:, max_eigenvalue_index].real
-    weights /= weights.sum()
-    return weights
-
-
-def calculate_score(decision_matrix, weights):
-    return np.dot(decision_matrix, weights)
-
-
 if __name__ == '__main__':
-    # global COST1, b_matrix, COST3  # 如果零件为三合一用COST1，其次用COST3
     b5 = [0, 1, 2]
     costs = np.array([])
     produce = np.array([])
@@ -208,41 +194,34 @@ if __name__ == '__main__':
             # COST1 = n * (price_1 + price_2 + price_3)
             COST3 = n * (price_7 + price_8)
 
-    # 标准化处理
-    max_cost = np.max(costs)
-    min_yield = np.min(yield_rate)
-    max_defective = np.max(defective)
+    cost_max = np.max(costs)
+    cost_min = np.min(costs)
+    yield_rate_max = np.max(yield_rate)
+    yield_rate_min = np.min(yield_rate)
+    defective_max = np.max(defective)
+    defective_min = np.min(defective)
 
-    normalized_costs = -costs / max_cost
-    normalized_yield_rate = yield_rate / min_yield
-    normalized_defective = -defective / max_defective
-
-    # 构建标准化后的决策矩阵
-    normalized_decision_matrix = np.array([normalized_costs, normalized_yield_rate, normalized_defective]).T
-
-
-    # 比较矩阵
-    comparison_matrix = np.array([
-        [5,     4    , 1],  # 成本5 vs 良率4, 成本5 vs 次品率1
-        [1 / 4, 1    , 4],  # 良率 vs 成本, 良率 vs 次品率
-        [1    , 1 / 4, 1/5]  # 次品率 vs 成本, 次品率 vs 良率
-    ])
-
-    weights = calculate_weights(comparison_matrix)
-    print("Weights:", weights)
-
-    scores = calculate_score(normalized_decision_matrix, weights)
-    sorted_indices = np.argsort(scores)[::-1]
-    print(sorted_indices)
+    scores = []
+    w1 = 0.5
+    w2 = 0.4
+    w3 = 0.1
+    for i in range(costs.size):
+        costs_normalized = (costs[i] - cost_min) / (cost_max - cost_min)
+        yields_normalized = (yield_rate[i] - yield_rate_min) / (yield_rate_max - yield_rate_min)
+        defectives_normalized = (defective[i] - defective_min) / (defective_max - defective_min)
+        score = w1 * -costs_normalized + w2 * yields_normalized + w3 * -defectives_normalized
+        scores.append((score, i))
+    # 按照分数降序排行
+    scores.sort(reverse=True, key=lambda x: x[0])
 
     # 输出结果
-    for i, index in enumerate(sorted_indices):
+    for rank, (score, index) in enumerate(scores):
         cost = costs[index]
         yield_rate_value = yield_rate[index]
         defective_value = defective[index]
         produce_value = produce[index]
 
-        print(f"Rank {i+1}: Matrix {index}, Score: {scores[index]:.4f}")
+        print(f"Rank {rank+1}: Matrix {index}, Score: {score:.5f}")
         print(f"Cost: {cost / produce_value:.2f} per one, Yield Rate: {yield_rate_value * 100.0:.3f}%, Defective: {defective_value:.3f}%, Produce: {produce_value:.2f}")
         print(mat[index])
         print("=====================================")
@@ -255,10 +234,8 @@ def main():
     produce = np.array([])
     defective = np.array([])
     yield_rate = np.array([])
-    mat = []
     for reverse_time in b5:
         b_matrices = gd.generate_matrix_q3_1(3, reverse_time + 1)
-        length = len(b_matrices)
 
         for matrix in b_matrices:
             b_matrix = matrix
@@ -272,35 +249,28 @@ def main():
             produce = np.append(produce, a)
             defective = np.append(defective, b)
             yield_rate = np.append(yield_rate, (a - b) / n)
-            mat.append(b_matrix)
 
             # COST1 = n * (price_1 + price_2 + price_3)
             COST3 = n * (price_7 + price_8)
 
-    # 标准化处理
-    max_cost = np.max(costs)
-    min_yield = np.min(yield_rate)
-    max_defective = np.max(defective)
+    cost_max = np.max(costs)
+    cost_min = np.min(costs)
+    yield_rate_max = np.max(yield_rate)
+    yield_rate_min = np.min(yield_rate)
+    defective_max = np.max(defective)
+    defective_min = np.min(defective)
 
-    normalized_costs = -costs / max_cost
-    normalized_yield_rate = yield_rate / min_yield
-    normalized_defective = -defective / max_defective
+    scores = []
+    w1 = 0.5
+    w2 = 0.4
+    w3 = 0.1
+    for i in range(costs.size):
+        costs_normalized = (costs[i] - cost_min) / (cost_max - cost_min)
+        yields_normalized = (yield_rate[i] - yield_rate_min) / (yield_rate_max - yield_rate_min)
+        defectives_normalized = (defective[i] - defective_min) / (defective_max - defective_min)
+        score = w1 * -costs_normalized + w2 * yields_normalized + w3 * -defectives_normalized
+        scores.append((score, i))
 
-    # 构建标准化后的决策矩阵
-    normalized_decision_matrix = np.array([normalized_costs, normalized_yield_rate, normalized_defective]).T
-
-
-    # 比较矩阵
-    comparison_matrix = np.array([
-        [5,     4    , 1],  # 成本5 vs 良率4, 成本5 vs 次品率1
-        [1 / 4, 1    , 4],  # 良率 vs 成本, 良率 vs 次品率
-        [1    , 1 / 4, 1/5]  # 次品率 vs 成本, 次品率 vs 良率
-    ])
-
-    weights = calculate_weights(comparison_matrix)
-    print("Weights:", weights)
-
-    scores = calculate_score(normalized_decision_matrix, weights)
-    sorted_indices = np.argsort(scores)[::-1]
-
-    return sorted_indices
+    # 按照分数降序排行
+    scores.sort(reverse=True, key=lambda x: x[0])
+    return scores

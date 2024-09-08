@@ -1,5 +1,5 @@
 import numpy as np
-import generate_data_q2_q3 as gd
+import generate_data_q3 as gd
 
 # 部件个数
 n = 100
@@ -257,7 +257,6 @@ def main():
     matrices = []
     for reverse_time in b5:
         b_matrices = gd.generate_matrix_q3_1(3, reverse_time + 1)
-        length = len(b_matrices)
 
         for matrix in b_matrices:
             b_matrix = matrix

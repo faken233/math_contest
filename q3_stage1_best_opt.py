@@ -1,11 +1,9 @@
-import 问题三_零部件合成中间件的局部最优方案_AHP层次分析法 as system1
-import 问题三_零部件合成中间件的局部最优方案_TOPSIS模型评价 as system2
-import 问题三_零部件合成中间件的局部最优方案_加权评分法 as system3
-import generate_data_q2_q3 as gd
-
 import matplotlib.pyplot as plt
 import numpy as np
 
+import q3_stage1_AHP as system1
+import q3_stage1_TOPSIS as system2
+import q3_stage1_weight_score as system3
 
 # 配置 Matplotlib 显示中文
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文标签

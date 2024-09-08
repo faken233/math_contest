@@ -1,5 +1,5 @@
 import numpy as np
-import generate_data_q2_q3 as gd
+import generate_data_q3 as gd
 
 # 变量
 p_intermediate_1 = p_intermediate_2 = 0.009 # 半成品一和二的所有方案次品率
