@@ -154,7 +154,14 @@ if __name__ == "__main__":
 """
 from matplotlib import pyplot as plt
 
+# 配置 Matplotlib 显示中文
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文标签
+plt.rcParams['axes.unicode_minus'] = False  # 正常显示符号
+
+
 fig = plt.figure(figsize=(12, 8))
+fig.patch.set_facecolor('white')
+
 plt.bar([32, 64], [0.9261, 0.9976], align='center', width=20)
 plt.xticks([0, 32, 64, 96])
 plt.ylim(0.8, 1.01)
@@ -162,6 +169,13 @@ plt.ylim(0.8, 1.01)
 # 在 y=0.95 和 y=0.90 处画横向虚线
 plt.axhline(y=0.95, color='blue', linestyle='--', label='α = 0.95')
 plt.axhline(y=0.90, color='red', linestyle='--', label='α = 0.90')
+
+# 在条形图上方标注虚线
+plt.text(32, 0.95, '0.95', color='blue', ha='center', va='bottom', fontsize=12)
+plt.text(64, 0.90, '0.90', color='red', ha='center', va='bottom', fontsize=12)
+
+plt.xlabel('最优样本量')
+plt.ylabel('准确值')
 
 # 添加图例
 plt.legend(fontsize='large')
