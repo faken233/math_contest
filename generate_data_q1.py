@@ -16,14 +16,14 @@ def generate_matrix(rows, cols):
 
 
 # 2. 指定每一行若1占行所有元素的百分之十以内为这一行对应零件可以被接受
-def is_row_acceptable(row, E):
+def is_row_acceptable(row):
     # 判断是否在误差范围内
-    return abs(np.sum(row) - E) <= len(row) * 0.1
+    return abs(np.sum(row)) <= len(row) * 0.1
 
 
 # 3. 生成一个一维数组，表示每一行是否可以被接受
-def generate_acceptance_array(matrix, E):
-    return np.array([is_row_acceptable(row, E) for row in matrix], dtype=int)
+def generate_acceptance_array(matrix):
+    return np.array([is_row_acceptable(row) for row in matrix], dtype=int)
 
 
 if __name__ == "__main__":
