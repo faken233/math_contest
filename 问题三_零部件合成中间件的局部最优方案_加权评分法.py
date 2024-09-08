@@ -152,7 +152,7 @@ def func_2(p1, p2, n1, n2, b1, b2, b3, b4):
             a, b = func_2(_p1, _p2,
                         unqualified_product_count,
                         unqualified_product_count,
-                        b_matrix[0, -b4], b_matrix[1, -b5], b_matrix[2, -b4], b4 - 1)
+                        b_matrix[0, -b4], b_matrix[1, -b4], b_matrix[2, -b4], b4 - 1)
             # 累加, 每次回炉都会有新的半成品伴随进入装配成品工序
             c_next_step += a
             # 赋值, 每次回炉都会将已有的不合格产品丢进回炉工序, 每次回炉都会对已有的不合格产品做操作, 此处使用赋值
@@ -174,18 +174,89 @@ if __name__ == '__main__':
     yield_rate = np.array([])
     mat = []
     for reverse_time in b5:
-        b_matrices = gd.generate_matrix_q3_1(4, reverse_time + 1)
+        b_matrices = gd.generate_matrix_q3_1(3, reverse_time + 1)
         length = len(b_matrices)
 
         for matrix in b_matrices:
             b_matrix = matrix
-            a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
-            costs = np.append(costs, COST1)
+
+            # a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
+            a, b = func_2(p_part, p_part, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], reverse_time)
+
+            # costs = np.append(costs, COST1)
+            costs = np.append(costs, COST3)
+
             produce = np.append(produce, a)
             defective = np.append(defective, b)
             yield_rate = np.append(yield_rate, (a - b) / n)
             mat.append(b_matrix)
-            COST1 = n * (price_1 + price_2 + price_3)
+
+            # COST1 = n * (price_1 + price_2 + price_3)
+            COST3 = n * (price_7 + price_8)
+
+    cost_max = np.max(costs)
+    cost_min = np.min(costs)
+    yield_rate_max = np.max(yield_rate)
+    yield_rate_min = np.min(yield_rate)
+    defective_max = np.max(defective)
+    defective_min = np.min(defective)
+
+    scores = []
+    w1 = 0.5
+    w2 = 0.4
+    w3 = 0.1
+    for i in range(costs.size):
+        costs_normalized = (costs[i] - cost_min) / (cost_max - cost_min)
+        yields_normalized = (yield_rate[i] - yield_rate_min) / (yield_rate_max - yield_rate_min)
+        defectives_normalized = (defective[i] - defective_min) / (defective_max - defective_min)
+        score = w1 * -costs_normalized + w2 * yields_normalized + w3 * -defectives_normalized
+        scores.append((score, i))
+    print(scores)
+
+    # 按照分数降序排行
+    scores.sort(reverse=True, key=lambda x: x[0])
+
+    # 输出结果
+    for rank, (score, index) in enumerate(scores):
+        cost = costs[index]
+        yield_rate_value = yield_rate[index]
+        defective_value = defective[index]
+        produce_value = produce[index]
+
+        print(f"Rank {rank+1}: Matrix {index}, Score: {score:.5f}")
+        print(f"Cost: {cost / produce_value:.2f} per one, Yield Rate: {yield_rate_value * 100.0:.3f}%, Defective: {defective_value:.3f}%, Produce: {produce_value:.2f}")
+        print(mat[index])
+        print("=====================================")
+
+
+def main():
+    global COST1, b_matrix, COST3  # 如果零件为三合一用COST1，其次用COST3
+    b5 = [0, 1, 2]
+    costs = np.array([])
+    produce = np.array([])
+    defective = np.array([])
+    yield_rate = np.array([])
+    mat = []
+    for reverse_time in b5:
+        b_matrices = gd.generate_matrix_q3_1(3, reverse_time + 1)
+        length = len(b_matrices)
+
+        for matrix in b_matrices:
+            b_matrix = matrix
+
+            # a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
+            a, b = func_2(p_part, p_part, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], reverse_time)
+
+            # costs = np.append(costs, COST1)
+            costs = np.append(costs, COST3)
+
+            produce = np.append(produce, a)
+            defective = np.append(defective, b)
+            yield_rate = np.append(yield_rate, (a - b) / n)
+            mat.append(b_matrix)
+
+            # COST1 = n * (price_1 + price_2 + price_3)
+            COST3 = n * (price_7 + price_8)
 
     cost_max = np.max(costs)
     cost_min = np.min(costs)
@@ -207,15 +278,4 @@ if __name__ == '__main__':
 
     # 按照分数降序排行
     scores.sort(reverse=True, key=lambda x: x[0])
-
-    # 输出结果
-    for rank, (score, index) in enumerate(scores):
-        cost = costs[index]
-        yield_rate_value = yield_rate[index]
-        defective_value = defective[index]
-        produce_value = produce[index]
-
-        print(f"Rank {rank+1}: Matrix {index}, Score: {score:.5f}")
-        print(f"Cost: {cost / produce_value:.2f} per one, Yield Rate: {yield_rate_value * 100.0:.3f}%, Defective: {defective_value:.3f}%, Produce: {produce_value:.2f}")
-        print(mat[index])
-        print("=====================================")
+    return scores

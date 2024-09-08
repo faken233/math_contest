@@ -190,7 +190,7 @@ def topsis(decision_matrix, weights, benefits):
 
 
 if __name__ == '__main__':
-    b5 = [0,1,2]
+    b5 = [0, 1, 2]
     costs = np.array([])
     produce = np.array([])
     defective = np.array([])
@@ -202,14 +202,20 @@ if __name__ == '__main__':
 
         for matrix in b_matrices:
             b_matrix = matrix
+
             # a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
             a, b = func_2(p_part, p_part, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], reverse_time)
-            costs = np.append(costs, COST1)
+
+            # costs = np.append(costs, COST1)
+            costs = np.append(costs, COST3)
+
             produce = np.append(produce, a)
             defective = np.append(defective, b)
             yield_rate = np.append(yield_rate, (a - b) / n)
             matrices.append(matrix)
-            COST1 = n * (price_1 + price_2 + price_3)
+
+            # COST1 = n * (price_1 + price_2 + price_3)
+            COST3 = n * (price_7 + price_8)
 
     # 构建决策矩阵
     decision_matrix = np.array([costs, yield_rate, defective]).T
@@ -242,6 +248,7 @@ if __name__ == '__main__':
         matrices_.append(index)
 
 def main():
+    global COST1, b_matrix, COST3  # 如果零件为三合一用COST1，其次用COST3
     b5 = [0, 1, 2]
     costs = np.array([])
     produce = np.array([])
@@ -254,14 +261,20 @@ def main():
 
         for matrix in b_matrices:
             b_matrix = matrix
+
             # a, b = func_1(p_part, p_part, p_part, n, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], b_matrix[3, 0], reverse_time)
             a, b = func_2(p_part, p_part, n, n, b_matrix[0, 0], b_matrix[1, 0], b_matrix[2, 0], reverse_time)
-            costs = np.append(costs, COST1)
+
+            # costs = np.append(costs, COST1)
+            costs = np.append(costs, COST3)
+
             produce = np.append(produce, a)
             defective = np.append(defective, b)
             yield_rate = np.append(yield_rate, (a - b) / n)
             matrices.append(matrix)
-            COST1 = n * (price_1 + price_2 + price_3)
+
+            # COST1 = n * (price_1 + price_2 + price_3)
+            COST3 = n * (price_7 + price_8)
 
     # 构建决策矩阵
     decision_matrix = np.array([costs, yield_rate, defective]).T
